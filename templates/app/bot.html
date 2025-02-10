@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Voice to Voice Q&A Interface</title>
+  <!-- CSRF Token (Optional for Django) -->
+  <meta name="csrf-token" content="{{ csrf_token }}">
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #f8f9fa;
+      padding-top: 50px;
+    }
+    .loading-spinner {
+      display: none;
+      margin: 10px auto;
+    }
+    .status-message {
+      font-style: italic;
+      color: gray;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 class="text-center">Voice to Voice Q&A System</h1>
+    <div class="card mx-auto" style="max-width: 600px;">
+      <div class="card-body">
+        <div class="mb-3">
+          <label for="question" class="form-label">Your Question</label>
+          <textarea class="form-control" id="question" rows="2" readonly></textarea>
+        </div>
+        <div class="mb-3">
+          <label for="answer" class="form-label">Answer</label>
+          <textarea class="form-control" id="answer" rows="3" readonly></textarea>
+        </div>
+        <div class="status-message text-center mb-3" id="statusMsg">Press the button and ask your question.</div>
+        <div class="d-grid">
+          <button id="startBtn" class="btn btn-primary">Start Voice Recognition</button>
+        </div>
+        <div class="loading-spinner text-center">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <!-- Bootstrap Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    $(document).ready(function() {
+      const startBtn = $('#startBtn');
+      const statusMsg = $('#statusMsg');
+      const questionBox = $('#question');
+      const answerBox = $('#answer');
+      const loadingSpinner = $('.loading-spinner');
+      
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      
+      if (!SpeechRecognition) {
+        alert("Speech Recognition API is not supported in this browser. Please use Google Chrome/Edge.");
+        return;
+      }
+
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'hi-IN';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.onstart = function() {
+        statusMsg.text("Listening... Speak now.");
+        questionBox.val('');
+        answerBox.val('');
+      };
+
+      recognition.onresult = function(event) {
+        const transcript = event.results[0][0].transcript;
+        questionBox.val(transcript);
+        
+        // Display loading spinner while waiting for the response
+        loadingSpinner.show();
+        statusMsg.text("Sending your question...");
+
+        $.ajax({
+          url: 'response',
+          type: 'POST',
+          data: { query: transcript },
+          success: function(response) {
+            loadingSpinner.hide();
+            answerBox.val(response.answer);
+            statusMsg.text("Question answered.");
+            speakAnswer(response.answer);
+          },
+          error: function(xhr, status, error) {
+            loadingSpinner.hide();
+            answerBox.val("An error occurred: " + error);
+            statusMsg.text("Error fetching the response. Try again.");
+          }
+        });
+      };
+
+      recognition.onerror = function(event) {
+        statusMsg.text("Speech recognition error: " + event.error);
+      };
+
+      recognition.onend = function() {
+        statusMsg.text("Speech recognition ended.");
+      };
+
+      startBtn.click(function() {
+        recognition.start();
+      });
+
+      // Speech synthesis to read the answer aloud
+      function speakAnswer(answerText) {
+        if ('speechSynthesis' in window) {
+          const utterance = new SpeechSynthesisUtterance(answerText);
+          utterance.lang = 'en-IN';
+          window.speechSynthesis.speak(utterance);
+        } else {
+          alert("Speech synthesis is not supported in this browser.");
+        }
+      }
+    });
+  </script>
+</body>
+</html>

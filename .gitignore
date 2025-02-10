@@ -1,0 +1,32 @@
+# Ignore Python compiled files
+__pycache__/
+*.pyc
+*.pyo
+
+# Ignore environment variables
+.env
+
+# Ignore virtual environments
+venv/
+*.venv/
+
+# Ignore database files
+db.sqlite3
+
+# Ignore migration files (optional)
+migrations/
+
+# Ignore media and static files (optional)
+media/
+static/
+
+# Ignore ChromaDB data
+chroma_db/
+
+# Ignore any logs or temporary files
+*.log
+*.tmp
+*.bak
+
+# Ignore data files
+data.txt
