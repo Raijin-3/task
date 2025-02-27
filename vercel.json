@@ -1,8 +1,26 @@
 {
+    "version": 2,
+    "builds": [
+      {
+        "src": "manage.py",
+        "use": "@vercel/python",
+        "config": { "maxLambdaSize": "50mb" }
+      }
+    ],
     "routes": [
-        {
-            "src": "/(.*)",
-            "dest": "task/wsgi.py"
-        }
-    ]
-}
+      {
+        "src": "/static/(.*)",
+        "dest": "/static/$1"
+      },
+      {
+        "src": "/(.*)",
+        "dest": "manage.py"
+      }
+    ],
+    "env": {
+      "DJANGO_SETTINGS_MODULE": "voicebot.settings",
+      "SECRET_KEY": "django-insecure-4r=v*ul5c-71f7t#(#n4811_=yt5g=tbo&fe$4g_vez(_y^1mg",
+      "DEBUG": "false"
+    }
+  }
+  
